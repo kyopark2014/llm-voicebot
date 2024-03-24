@@ -1,6 +1,6 @@
 # 음성 챗봇 만들기
 
-여기서는 음성 텍스트 변환(Speech-to-Text), LLM(Large Language Model), 텍스트 음성 변환 (Text-to-Speech)를 통해 음섬 챗봇 (voicebot)을 만드는것을 설명합니다.
+여기서는 음성 텍스트 변환(Speech-to-Text), LLM(Large Language Model), 텍스트 음성 변환 (Text-to-Speech)를 통해 음성 챗봇 (voicebot)을 만드는것을 설명합니다. 전체적인 Architecture는 아래와 같습니다.
 
 <img src="main-architecture.png" width="800">
 
