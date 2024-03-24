@@ -75,4 +75,127 @@ async def handle_transcript_event(self, transcript_event: TranscriptEvent):
 
 ## Text-to-Speech
 
-Amazon Polly를 이용해 텍스트를 음성으로 변환합니다. 이때 시간지연이 없도록 파일이 아닌 음성데이터를 이용하여 변환 및 음성 송출을 수행합니다. 
+[Lambda-polly](./lambda-polly/lambda_function.py)에서는 텍스트를 음성으로 변환합니다. 여기에서는 ssml형태로 보이스를 조정하고 LangCode를 지정한 후에 출력은 ogg 파일을 얻습니다. 이것을 파일로 저장하고 재생하면 지연시간이 늘어나기 때문에 아래와 같이 base64로 encoding후에 client로 전달합니다.
+
+```python
+response = polly_client.synthesize_speech(
+    Text=ssml_text,
+    TextType='ssml', # 'ssml'|'text'
+    Engine='neural',  # 'standard'|'neural'
+    LanguageCode=langCode, 
+    OutputFormat='ogg_vorbis', # 'json'|'mp3'|'ogg_vorbis'|'pcm',
+    VoiceId=voiceId
+)
+
+encoded_content = base64.b64encode(response['AudioStream'].read()).decode()
+```
+
+client는 [chat.html](./html/chat.html)와 같이 아래와 onended를 포함한 audio를 정의합니다. 
+
+```html
+<audio src="" onended=""></audio>
+```
+
+[chat.js](./html/chat.js)에서는 아래와 같이 '/speech' API를 이용해 base64로 encoding된 음성파일(ogg)를 가져와서 Hashmap인 audoData에 저장합니다.
+
+```java
+let audioData = new HashMap();
+function loadAudio(requestId, text) {
+    const uri = "speech";
+    const xhr = new XMLHttpRequest();
+
+    let voiceId = 'Seoyeon';
+    let langCode = 'ko-KR';  // ko-KR en-US(영어)) ja-JP(일본어)) cmn-CN(중국어)) sv-SE(스페인어))
+
+    xhr.open("POST", uri, true);
+    xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            response = JSON.parse(xhr.responseText);
+
+            audioData[requestId+text] = response.body;
+
+            console.log('successfully loaded. text= '+text);
+        }
+    };
+    
+    var requestObj = {
+        "text": text,
+        "voiceId": voiceId,
+        "langCode": langCode
+    }
+
+    var blob = new Blob([JSON.stringify(requestObj)], {type: 'application/json'});
+
+    xhr.send(blob);            
+} 
+```
+
+LLM의 답변이 모두 온 후에 음성으로 변환하면 지연시간이 늘어나서 사용성이 나빠지므로, streaming으로 들어오는 text를 '.', '?', '!', ':' 기준으로 잘라서 라인형태로 재생합니다. 이때, 각 라인의 글자의 수가 다르므로 음성으로 encoding하는 시간이 다를 있습니다. 따라서, 아래와 같이 각 라인은 playList에 저장을 수행한 후에 loadAudio()로 음성으로 변환한 후에 audoData를 순차적으로 재생합니다. 
+
+```java
+lineText += response.msg;
+lineText = lineText.replace('\n', '');
+if (lineText.length > 3 && (response.msg == '.' || response.msg == '?' || response.msg == '!' || response.msg == ':')) {
+    console.log('lineText: ', lineText);
+    text = lineText
+    playList.push({
+        'played': false,
+        'requestId': requestId,
+        'text': text
+    });
+    lineText = "";
+
+    loadAudio(response.request_id, text);
+}
+```
+
+이후 playAudioList()를 이용해 재생을 하게 됩니다. 음성 재생을 순차적으로 하기 위하여 각 라인의 음성을 재생(play)할 때에는 next를 false로 지정하여 play를 지연시킵니다. 하나의 라인에 대한 재생이 완료되면 아래와 같이 next를 true로 변경하여 다음 라인에 대한 음성을 재생합니다. 또한, 이때에 라인의 글자 수가 많아서 아직 음성으로 변환이 되기 전이라면 음성 변환이 완료될 때 까지 기다렸다가 순차적으로 재생하여야 합니다. 
+
+```java
+function playAudioList() {
+    for(let i=0; i<playList.length;i++) {
+        if(next == true && playList[i].played == false && requestId == playList[i].requestId && audioData[requestId+playList[i].text]) {
+            current = i;
+            playAudioLine(audioData[requestId+playList[i].text]);            
+            next = false;
+            break;
+        }
+        else if(requestId != playList[i].requestId) {
+            playList[i].played = true;
+        }
+    }
+}
+```
+
+playAudioLine()는 하나의 라인에 대한 음성 변환을 수행합니다. audioData에 저장되었던 음성파일을 로드한 후에 playAudio()를 이용해 재생을 수행합니다. 재생완료를 알기 위하여 [onended](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/ended_event)을 이용합니다. 
+```java
+async function playAudioLine(audio_body){    
+    var sound = "data:audio/ogg;base64,"+audio_body;
+    
+    var audio = document.querySelector('audio');
+    audio.src = sound;
+    
+    console.log('play audio');
+    await playAudio(audio)
+}
+
+// audio play
+var audio = document.querySelector('audio');
+audio.addEventListener("ended", function() {
+    console.log("finish audio, text= ", playList[current].text)
+    delay(1000)
+
+    next = true;
+    playList[current].played = true;
+    audioData.remove([requestId+playList[current].text]);
+
+    playAudioList()
+});
+
+function playAudio(audio) {
+    return new Promise(res=>{
+        audio.play()
+        audio.onended = res
+    })
+}
+```
