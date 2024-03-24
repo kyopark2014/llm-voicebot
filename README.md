@@ -2,7 +2,7 @@
 
 여기서는 음성 텍스트 변환(Speech-to-Text), LLM(Large Language Model), 텍스트 음성 변환 (Text-to-Speech)를 통해 음섬 챗봇 (voicebot)을 만드는것을 설명합니다.
 
-![image](https://github.com/kyopark2014/llm-voicebot/assets/52392004/274954db-297c-4502-bf87-50d64e139a61)
+<img src="https://github.com/kyopark2014/llm-voicebot/assets/52392004/274954db-297c-4502-bf87-50d64e139a61" width="800">
 
 ## Speech-to-Text
 
