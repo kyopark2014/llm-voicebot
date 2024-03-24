@@ -10,7 +10,6 @@ import re
 import traceback
 import base64
 
-import uuid
 from botocore.config import Config
 from io import BytesIO
 from urllib import parse
@@ -24,7 +23,6 @@ from langchain_core.prompts import MessagesPlaceholder, ChatPromptTemplate
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.memory import ConversationBufferWindowMemory
 from langchain_community.embeddings import BedrockEmbeddings
-from langchain_community.vectorstores.faiss import FAISS
 from langchain_core.messages import HumanMessage, SystemMessage
 from multiprocessing import Process, Pipe
 
