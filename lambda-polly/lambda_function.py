@@ -6,16 +6,14 @@ import base64
 
 polly_client = boto3.client('polly')
 
-s3_bucket = os.environ.get('s3_bucket') # bucket name
-
 def lambda_handler(event, context):
     print('event: ', event)
     
     text = event['text']
     voiceId = event['voiceId']
     langCode = event['langCode']
+    speed = event['speed']
     
-    speed = 120
     ssml_text = f'<speak><prosody rate="{speed}%">{text}</prosody></speak>'
     
     try: 

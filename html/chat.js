@@ -164,6 +164,7 @@ let playList = [];
 let current = 0;
 let requestId = ""
 let next = true;
+let requested = new HashMap();
 function connect(endpoint, type) {
     const ws = new WebSocket(endpoint);
 
@@ -214,8 +215,27 @@ function connect(endpoint, type) {
                 feedback.style.display = 'none';       
                    
                 addReceivedMessage(response.request_id, response.msg);  
-                
-                retryCounter = 5;
+                // console.log('response.msg: ', response.msg);
+
+                console.log('requested: ', requested[response.request_id])
+
+                if(requested[response.request_id]==undefined) {
+                    requestId = response.request_id;
+                    playList.push({
+                        'played': false,
+                        'requestId': requestId,
+                        'text': response.msg
+                    });
+                    lineText = "";      
+            
+
+                    loadAudio(response.request_id, response.msg);
+                    
+                    next = true;
+                    playAudioList();
+                }
+
+                retryCounter = 10;
                 checkingDelayedPlayList();
 
                 // playAudioList();
@@ -246,6 +266,7 @@ function connect(endpoint, type) {
                     });
                     lineText = "";      
         
+                    requested[response.request_id+text] = true;
                     loadAudio(response.request_id, text);                                  
                 }
                 
@@ -403,10 +424,16 @@ function loadAudio(requestId, text) {
     const uri = "speech";
     const xhr = new XMLHttpRequest();
 
+    let speed = 120;
     let voiceId = 'Seoyeon';
     // voiceId: 'Aditi'|'Amy'|'Astrid'|'Bianca'|'Brian'|'Camila'|'Carla'|'Carmen'|'Celine'|'Chantal'|'Conchita'|'Cristiano'|'Dora'|'Emma'|'Enrique'|'Ewa'|'Filiz'|'Gabrielle'|'Geraint'|'Giorgio'|'Gwyneth'|'Hans'|'Ines'|'Ivy'|'Jacek'|'Jan'|'Joanna'|'Joey'|'Justin'|'Karl'|'Kendra'|'Kevin'|'Kimberly'|'Lea'|'Liv'|'Lotte'|'Lucia'|'Lupe'|'Mads'|'Maja'|'Marlene'|'Mathieu'|'Matthew'|'Maxim'|'Mia'|'Miguel'|'Mizuki'|'Naja'|'Nicole'|'Olivia'|'Penelope'|'Raveena'|'Ricardo'|'Ruben'|'Russell'|'Salli'|'Seoyeon'|'Takumi'|'Tatyana'|'Vicki'|'Vitoria'|'Zeina'|'Zhiyu'|'Aria'|'Ayanda'|'Arlet'|'Hannah'|'Arthur'|'Daniel'|'Liam'|'Pedro'|'Kajal'|'Hiujin'|'Laura'|'Elin'|'Ida'|'Suvi'|'Ola'|'Hala'|'Andres'|'Sergio'|'Remi'|'Adriano'|'Thiago'|'Ruth'|'Stephen'|'Kazuha'|'Tomoko'
 
     let langCode = 'ko-KR';  // ko-KR en-US(영어)) ja-JP(일본어)) cmn-CN(중국어)) sv-SE(스페인어))
+    if(conversationType == 'translation') {
+        langCode = 'en-US';
+        voiceId = 'Kimberly'; // child Ivy
+        speed = '100';
+    } 
 
     xhr.open("POST", uri, true);
     xhr.onreadystatechange = () => {
@@ -425,7 +452,8 @@ function loadAudio(requestId, text) {
     var requestObj = {
         "text": text,
         "voiceId": voiceId,
-        "langCode": langCode
+        "langCode": langCode,
+        "speed": speed
     }
     // console.log("request: " + JSON.stringify(requestObj));
 
