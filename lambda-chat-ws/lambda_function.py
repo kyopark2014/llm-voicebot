@@ -316,62 +316,6 @@ def general_conversation(chat, query):
     
     return msg
 
-def ISTJ(chat, query):
-    global time_for_inference, history_length, token_counter_history    
-    time_for_inference = history_length = token_counter_history = 0
-    
-    system = ( #INFJ
-        """다음의 <context> tag는 Human과 Assistant의 대화야. Assistant의 MBTI는 ISTJ이고, 아래와 같은 표현을 잘 사용해. Asistant는 동의를 잘하는 성격이고, 말투가 조심스러워. 답변은 한문장으로 해줘.
-        
-        - 너의 이름은 짱구야.
-        - 팩폭해서 순살 만들고 싶다.
-        - 저것들이 물증없다고 잡아떼겠지?
-        - 심증은 백퍼 천퍼 만퍼인데
-        - 아니긴 뭑아 아니야 이씨!
-        - 일을 그렇게 해라 제발 쪼옴!
-        - 안녕하세요. 오셨어요?
-        - 왜요 왜요 왜요
-        - 왜 그랬을까?
-        - 아 진짜 귀엽다니까        
-        - 어무 너무 서운했겠다!
-        - 근대 그 마음도 이해가 돼
-            
-        <context>
-        {history}
-        </context>
-        """
-    )
-    
-    human = "{input}"
-    
-    prompt = ChatPromptTemplate.from_messages([("system", system), MessagesPlaceholder(variable_name="history"), ("human", human)])
-    print('prompt: ', prompt)
-    
-    history = memory_chain.load_memory_variables({})["chat_history"]
-    print('memory_chain: ', history)
-                
-    chain = prompt | chat    
-    try: 
-        isTyping()  
-        stream = chain.invoke(
-            {
-                "history": history,
-                "input": query,
-            }
-        )
-        msg = readStreamMsg(stream.content)    
-                            
-        msg = stream.content
-        print('msg: ', msg)
-    except Exception:
-        err_msg = traceback.format_exc()
-        print('error message: ', err_msg)        
-            
-        sendErrorMessage(err_msg)    
-        raise Exception ("Not able to request to LLM")
-    
-    return msg
-
 def isTyping():    
     msg_proceeding = {
         'request_id': requestId,
@@ -492,106 +436,9 @@ def translate_text(chat, text):
 
     return msg[msg.find('<result>')+8:len(msg)-9] # remove <result> tag
 
-def extract_sentiment(chat, text):
-    system = (
-        """아래의 <example> review와 Extracted Topic and sentiment 인 <result>가 있습니다.
-        <example>
-        객실은 작지만 깨끗하고 편안합니다. 프론트 데스크는 정말 분주했고 체크인 줄도 길었지만, 직원들은 프로페셔널하고 매우 유쾌하게 각 사람을 응대했습니다. 우리는 다시 거기에 머물것입니다.
-        </example>
-        <result>
-        청소: 긍정적, 
-        서비스: 긍정적
-        </result>
-
-        아래의 <review>에 대해서 위의 <result> 예시처럼 Extracted Topic and sentiment 을 만들어 주세요."""
-    )
-        
-    human = "<review>{text}</review>"
-    
-    prompt = ChatPromptTemplate.from_messages([("system", system), ("human", human)])
-    print('prompt: ', prompt)
-    
-    chain = prompt | chat    
-    try: 
-        result = chain.invoke(
-            {
-                "text": text
-            }
-        )        
-        msg = result.content                
-        print('result of sentiment extraction: ', msg)
-        
-    except Exception:
-        err_msg = traceback.format_exc()
-        print('error message: ', err_msg)                    
-        raise Exception ("Not able to request to LLM")
-    
-    return msg
-
-def extract_information(chat, text):
-    system = (
-        """다음 텍스트에서 이메일 주소를 정확하게 복사하여 한 줄에 하나씩 적어주세요. 입력 텍스트에 정확하게 쓰여있는 이메일 주소만 적어주세요. 텍스트에 이메일 주소가 없다면, "N/A"라고 적어주세요. 또한 결과는 <result> tag를 붙여주세요."""
-    )
-        
-    human = "<text>{text}</text>"
-    
-    prompt = ChatPromptTemplate.from_messages([("system", system), ("human", human)])
-    print('prompt: ', prompt)
-    
-    chain = prompt | chat    
-    try: 
-        result = chain.invoke(
-            {
-                "text": text
-            }
-        )        
-        output = result.content        
-        msg = output[output.find('<result>')+8:len(output)-9] # remove <result> 
-        
-        print('result of information extraction: ', msg)
-    except Exception:
-        err_msg = traceback.format_exc()
-        print('error message: ', err_msg)                    
-        raise Exception ("Not able to request to LLM")
-    
-    return msg
-
 def use_multimodal(chat, img_base64, query):    
     if query == "":
         query = "그림에 대해 상세히 설명해줘."
-    
-    messages = [
-        SystemMessage(content="답변은 500자 이내의 한국어로 설명해주세요."),
-        HumanMessage(
-            content=[
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/png;base64,{img_base64}", 
-                    },
-                },
-                {
-                    "type": "text", "text": query
-                },
-            ]
-        )
-    ]
-    
-    try: 
-        result = chat.invoke(messages)
-        
-        summary = result.content
-        print('result of code summarization: ', summary)
-    except Exception:
-        err_msg = traceback.format_exc()
-        print('error message: ', err_msg)                    
-        raise Exception ("Not able to request to LLM")
-    
-    return summary
-
-def earn_gesture(chat, img_base64, query):    
-    if query == "":
-        query = "그림에서 사람이 표현하는 Guesture에 대해 설명해줘."
     
     messages = [
         SystemMessage(content="답변은 500자 이내의 한국어로 설명해주세요."),
@@ -731,8 +578,8 @@ def getResponse(jsonBody):
             else:            
                 if convType == "normal":
                     msg = general_conversation(chat, text)   
-                elif convType == "ISTJ":
-                    msg = ISTJ(chat, text)   
+                elif convType == "translation":
+                    msg = translate_text(chat, text)   
                 else: 
                     msg = general_conversation(chat, text)   
                         
