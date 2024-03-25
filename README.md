@@ -53,7 +53,7 @@ async def handle_transcript_event(self, transcript_event: TranscriptEvent):
       if result.is_partial == False:
         for alt in result.alternatives:
           print('----> ', alt.transcript)
-          #msg = {
+          msg = {
             "userId": userId,
             "query": alt.transcript,
             "state": "completed"
