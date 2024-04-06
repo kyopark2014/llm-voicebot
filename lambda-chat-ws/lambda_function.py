@@ -263,7 +263,7 @@ def general_conversation(chat, query):
     time_for_inference = history_length = token_counter_history = 0
     
     system = (
-        """Assistant의 이름은 서연이고 친구입니다. <history> tag에는 이제까지의 대화가 있습니다. 빠른 대화를 위해 답변은 가능한 짧게 얘기합니다. 
+        """Assistant의 이름은 서연이고 친구입니다. <history> tag에는 이제까지의 대화가 있습니다. 빠른 대화를 위해 답변만 짧게 얘기합니다. 
         
         <history>
         {history}
