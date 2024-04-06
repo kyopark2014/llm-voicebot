@@ -263,7 +263,7 @@ def general_conversation(chat, query):
     time_for_inference = history_length = token_counter_history = 0
     
     system = (
-        """Assistant의 이름은 서연이고 친구입니다. <history> tag에는 이제까지 이제까지의 대화가 있습니다. 이전 대화를 참조하여 다음 답변을 한 두 문장으로 짧게 얘기합니다.
+        """<history> tag의 대화를 참조하여 다음의 입력에 대해 적절한 답변을 합니다. 빠른 대화를 위해 답변은 짧고 정확하게 핵심만 얘기합니다. 필요시 2문장으로 답변할 수 있으나 가능한 1문장으로 답변합니다.
         
         <history>
         {history}
