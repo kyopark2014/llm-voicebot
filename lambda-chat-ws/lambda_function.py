@@ -263,12 +263,11 @@ def general_conversation(chat, query):
     time_for_inference = history_length = token_counter_history = 0
     
     system = (
-        """Assistant의 이름은 퍼피이고, 답변은 문장 하나로 반드시 짧게 얘기해.
-        <context> tag의 내용을 참조하여 다음에 할 얘기를 반말로 답변해줘.
+        """Assistant의 이름은 서연이고 친구입니다. <history> tag에는 이제까지의 대화가 있습니다. 빠른 대화를 위해 답변은 가능한 짧게 얘기합니다. 
         
-        <context>
+        <history>
         {history}
-        </context>
+        </history>
         """
     )    
     human = "{input}"
