@@ -1,5 +1,21 @@
 const protocol = 'WEBSOCKET'; // WEBSOCKET 
 const langstate = 'korean'; // korean or english
+const enableTTS = true;
+const enableDelayedMessage = true; // in order to manipulate the voice messages
+
+if(enableTTS) {
+    var AudioContext;
+    var audioContext;
+
+    window.onload = function() {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(() => {
+            AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioContext = new AudioContext();
+        }).catch(e => {
+            console.error(`Audio permissions denied: ${e}`);
+        });
+    }
+}
 
 // Common
 let userId = localStorage.getItem('userId'); // set userID if exists 
@@ -198,7 +214,6 @@ function connect(endpoint, type) {
     };
 
     // message 
-    let word = "";
     ws.onmessage = function (event) {     
         isConnected = true;   
         if (event.data.substr(1,8) == "__pong__") {
@@ -217,29 +232,27 @@ function connect(endpoint, type) {
                 addReceivedMessage(response.request_id, response.msg);  
                 // console.log('response.msg: ', response.msg);
 
-                console.log('requested: ', requested[response.request_id])
-
-                if(requested[response.request_id]==undefined) {
-                    requestId = response.request_id;
-                    playList.push({
-                        'played': false,
-                        'requestId': requestId,
-                        'text': response.msg
-                    });
-                    lineText = "";      
-            
-
-                    loadAudio(response.request_id, response.msg);
+                if(enableTTS) {
+                    console.log('requested: ', requested[response.request_id]);
+                    if(requested[response.request_id] == undefined) {
+                        requestId = response.request_id;
+                        playList.push({
+                            'played': false,
+                            'requestId': requestId,
+                            'text': response.msg
+                        });
+                        lineText = "";      
                     
-                    next = true;
-                    playAudioList();
-                }
-
-                retryCounter = 10;
-                checkingDelayedPlayList();
-
-                // playAudioList();
-                // playList = [];                
+                        loadAudio(response.request_id, response.msg);
+                            
+                        next = true;
+                        playAudioList();
+                    }    
+                    
+                    retryCounter = 10;
+                    checkingDelayedPlayList();
+                    // playList = [];
+                }                              
             }          
             else if(response.status == 'istyping') {
                 feedback.style.display = 'inline';
@@ -254,24 +267,26 @@ function connect(endpoint, type) {
                 addReceivedMessage(response.request_id, sentance);
                 // console.log('response.msg: ', response.msg);
 
-                lineText += response.msg;
-                lineText = lineText.replace('\n','');
-                if(lineText.length>3 && (response.msg == '.' || response.msg == '?' || response.msg == '!'|| response.msg == ':')) {     
-                    console.log('lineText: ', lineText);
-                    text = lineText
-                    playList.push({
-                        'played': false,
-                        'requestId': requestId,
-                        'text': text
-                    });
-                    lineText = "";      
-        
-                    requested[response.request_id+text] = true;
-                    loadAudio(response.request_id, text);                                  
+                if(enableTTS) {
+                    lineText += response.msg;
+                    lineText = lineText.replace('\n','');
+                    if(lineText.length>3 && (response.msg == '.' || response.msg == '?' || response.msg == '!'|| response.msg == ':')) {     
+                        console.log('lineText: ', lineText);
+                        text = lineText
+                        playList.push({
+                            'played': false,
+                            'requestId': requestId,
+                            'text': text
+                        });
+                        lineText = "";      
+            
+                        requested[response.request_id] = true;
+                        loadAudio(response.request_id, text);                                  
+                    }
+                    
+                    requestId = response.request_id;
+                    playAudioList();
                 }
-                
-                requestId = response.request_id;
-                playAudioList();
             }                
             else if(response.status == 'debug') {
                 feedback.style.display = 'none';
@@ -282,7 +297,14 @@ function connect(endpoint, type) {
             else if(response.status == 'error') {
                 feedback.style.display = 'none';
                 console.log('error: ', response.msg);
-                addNotifyMessage(response.msg);
+
+                if(response.msg.indexOf('throttlingException') || response.msg.indexOf('Too many requests') || response.msg.indexOf('too many requests')) {
+                    addNotifyMessage('허용된 요청수를 초과하였습니다. 추후 다시 재시도 해주세요.');  
+                }
+                else {
+                    addNotifyMessage(response.msg);
+                }
+                
             }   
         }        
     };
@@ -308,8 +330,73 @@ function connect(endpoint, type) {
     return ws;
 }
 
+let redirectTm; // timer for redirection
+let remainingRedirectedMessage;  // merge two consecutive messages in 2 seconds
+let messageTransfered = new HashMap();
+let messageMemory = new HashMap();   // duplication check caused by pubsub in the case of abnormal disconnection
+
+function requestReDirectMessage(requestId, query, userId, requestTime, conversationType) {  
+    console.log('--> send the redirected message');
+        
+    if(messageTransfered.get(requestId)==undefined) {
+        console.log('--> sendMessage: ', query);
+
+        next = true;  // initiate valriable 'next' for audio play        
+        sendMessage({
+            "user_id": userId,
+            "request_id": requestId,
+            "request_time": requestTime,        
+            "type": "text",
+            "body": query,
+            "convType": conversationType
+        });
+        messageMemory.put(requestId, query);      
+        messageTransfered.put(requestId, true);
+                
+        remainingRedirectedMessage = "";
+    }        
+}
+
+function delayedRequestForRedirectionMessage(requestId, query, userId, requestTime, conversationType) {    
+    console.log('--> start delay() of redirected message');
+
+    remainingRedirectedMessage = {
+        'timestr': requestTime,
+        'requestId': requestId,
+        'message': query
+    }; 
+    console.log('new remainingRedirectedMessage[message]: ', remainingRedirectedMessage['message']);
+
+    redirectTm = setTimeout(function () {
+        console.log('--> delayed request: ', query);
+        console.log('messageTransfered[requestId] = ', messageTransfered.get(requestId));
+        
+        if(messageTransfered.get(requestId)==undefined) {
+            console.log('--> sendMessage: ', query);
+
+            next = true;  // initiate valriable 'next' for audio play        
+            sendMessage({
+                "user_id": userId,
+                "request_id": requestId,
+                "request_time": requestTime,        
+                "type": "text",
+                "body": query,
+                "convType": conversationType
+            });
+            messageMemory.put(requestId, query);      
+            messageTransfered.put(requestId, true);
+                
+            remainingRedirectedMessage = "";
+        }
+        
+        clearRedirectTm();
+    }, 2000);
+}
+function clearRedirectTm() {
+    clearTimeout(redirectTm);
+}
+
 // voice session 
-let listMessages = new HashMap();   // duplication check caused by pubsub in the case of abnormal disconnection
 function voiceConnect(voiceEndpoint, type) {
     const ws_voice = new WebSocket(voiceEndpoint);
 
@@ -337,10 +424,10 @@ function voiceConnect(voiceEndpoint, type) {
             voicePong();
             return;
         }
-        else {
+        else {  // voice messages delivered from interpreter (device <-> trasncribe)
             response = JSON.parse(event.data)
 
-             if(response.status == 'redirected') {    
+             if(response.status == 'redirected') {  // voice message status == redirected
                 feedback.style.display = 'none';      
                 console.log('response: ', response);
                 
@@ -356,39 +443,35 @@ function voiceConnect(voiceEndpoint, type) {
                 let current = new Date();
                 let datastr = getDate(current);
                 let timestr = getTime(current);
-                let requestTime = datastr+' '+timestr
+                let requestTime = datastr+' '+timestr;
+
+                console.log('remainingRedirectedMessage', remainingRedirectedMessage);    // last redirected message but not delivered
 
                 if(state=='completed') {
-                    let previous = listMessages.get(requestId); 
-                    if (previous == undefined) previous = "";
-                    console.log('previosu: ', previous);     
+                    if (remainingRedirectedMessage && requestId != remainingRedirectedMessage['requestId']) {
+                        requestId = remainingRedirectedMessage['requestId']; // use the remained requestId for display
+                       
+                        remainingRedirectedMessage['message'] = remainingRedirectedMessage['message']+'\n'+query; // add new message
+                        query = remainingRedirectedMessage['message'];
+                    }
 
-                    console.log('previous '+previous.length+', new: '+query.length);
-                    if(query !=  previous) {
+                    if(messageMemory.get(requestId)==undefined) { 
                         addSentMessage(requestId, timestr, query);
-    
-                        if(protocol == 'WEBSOCKET') {
-                            console.log('--> request: ', query);
-                            sendMessage({
-                                "user_id": userId,
-                                "request_id": requestId,
-                                "request_time": requestTime,        
-                                "type": "text",
-                                "body": query,
-                                "convType": conversationType
-                            })
+
+                        if(enableDelayedMessage == false) {
+                            requestReDirectMessage(requestId, query, userId, requestTime, conversationType)
                         }
-                        
-                        listMessages.put(requestId, query);  
+                        else {  // in order to manipulate voice messages where the message will be delayed for one time
+                            delayedRequestForRedirectionMessage(requestId, query, userId, requestTime, conversationType);                                   
+                        }
                     }
-                    else {
+                    else {  
                         console.log('ignore the duplicated message: ', query);
-                    }
+                    }                    
                 }
                 else {
                     addSentMessage(requestId, timestr, query);
-                }
-                
+                }                            
             }      
             else if(response.status == 'error') {
                 feedback.style.display = 'none';
@@ -431,10 +514,10 @@ function loadAudio(requestId, text) {
     let langCode = 'ko-KR';  // ko-KR en-US(영어)) ja-JP(일본어)) cmn-CN(중국어)) sv-SE(스페인어))
     if(conversationType == 'translation') {
         langCode = 'en-US';
-        voiceId = 'Kimberly'; // child Ivy
+        voiceId = 'Joanna'; // child Ivy adult Joanna
         speed = '100';
-    } 
-
+    }    
+    
     xhr.open("POST", uri, true);
     xhr.onreadystatechange = () => {
         if (xhr.readyState === 4 && xhr.status === 200) {
@@ -467,7 +550,7 @@ function playAudioList() {
     
     for(let i=0; i<playList.length;i++) {
         // console.log('audio data--> ', audioData[requestId+playList[i].text])
-        // console.log('playedList: ', playList);
+        console.log('playedList: ', playList);
 
         if(next == true && playList[i].played == false && requestId == playList[i].requestId && audioData[requestId+playList[i].text]) {
             console.log('[play] '+i+': '+requestId+', text: '+playList[i].text);
@@ -632,7 +715,7 @@ function onSend(e) {
 
         let requestId = uuidv4();
         addSentMessage(requestId, timestr, message.value);
-        
+
         if(protocol == 'WEBSOCKET') {
             sendMessage({
                 "user_id": userId,
