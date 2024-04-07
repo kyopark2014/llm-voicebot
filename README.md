@@ -53,7 +53,7 @@ async def basic_transcribe():
     await asyncio.gather(write_chunks(stream), handler.handle_events())
 ````
 
-텍스트는 아래와 같이 handle_transcript_event()에서 수행합니다. 결과는 partial 결과 후에 전체 결과를 얻을 수 있습니다. 이 데이터를 requests를 이용하여 특정 API 서버로 전달하면, 추후 생성형 AI에서 활용할 수 있습니다. 
+텍스트는 아래와 같이 handle_transcript_event()에서 수행합니다. 결과는 Stream 형태로 부분(partial) 결과 후에 전체 결과(full)를 얻을 수 있습니다. 이 데이터를 requests를 이용하여 API 서버로 전달하면, 생성형 AI에서 활용할 수 있습니다. 
 ```python
 async def handle_transcript_event(self, transcript_event: TranscriptEvent):
   results = transcript_event.transcript.results
