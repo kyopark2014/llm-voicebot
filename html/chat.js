@@ -1,7 +1,7 @@
 const protocol = 'WEBSOCKET'; // WEBSOCKET 
 const langstate = 'korean'; // korean or english
 const enableTTS = true;
-const enableDelayedMessage = true; // in order to manipulate the voice messages
+const enableDelayedMessage = false; // in order to manipulate the voice messages
 
 if(enableTTS) {
     var AudioContext;
