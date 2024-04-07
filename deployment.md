@@ -72,7 +72,7 @@ cdk deploy --all
 
 9) NAT 설정
 
-[VPC Console](https://ap-northeast-1.console.aws.amazon.com/vpcconsole/home?region=ap-northeast-1#vpcs:)에 접속합니다.
+[VPC Console](https://ap-northeast-2.console.aws.amazon.com/vpcconsole/home?region=ap-northeast-2#vpcs:)에 접속합니다.
 
 아래와 같이 "vpc-for-llm-voicebot"의 VPC ID를 선택합니다. 
 
