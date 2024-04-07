@@ -2,12 +2,14 @@
 
 여기서는 음성 텍스트 변환(Speech-to-Text), LLM(Large Language Model), 텍스트 음성 변환 (Text-to-Speech)를 통해 음성 챗봇 (voicebot)을 만드는것을 설명합니다. 전체적인 Architecture는 아래와 같습니다. 
 
-- 디바이스의 Voice Interpreter는 목소리에 대한 음성 스트림을 Transcrbie로 전송하여 텍스트로 변환합니다.
-- 텍스트를 브라우저에 있는 javascript로 만든 메시지앱이 사용하기 위하여 CloudFront - API Gateway - Lambda (redis)로 HTTP Post 방식으로 전달합니다.
-- 음성에서 변환된 텍스트는 Amazon ElastiCache (Redis)에 publish 되며, 이를 subscribe하고 있는 Lambda (voice)로 전달됩니다.
-- Javacript로 된 메시지앱은 API Gateway와 Websocket으로 연결되어 있으므로 Redis를 통해 Lambda(voice)로 전달된 메시지는 즉시 client인 메시지앱으로 전달됩니다.
-- 메시지앱은 API Gateway - Lambda(chat)을 이용하여 LLM에 답변을 요청합니다. 이때, 기존에 대화 이력이 없는 경우에는 DynamoDB에 이전 대화 이력이 있는지 확인하여 내부 메모리에 업데이트 합니다.
-- LLM을 통해 얻어진 답변은  CloudFront - API Gateway - Lambda (Polly)로 HTTP POST 방식으로 음성으로 변환을 요청합니다. Polly에서는 ogg형태의 음성 바이너리를 응답(200 OK)로 전달하면 브라우저에서 재생합니다.
+1) 디바이스의 Voice Interpreter는 목소리에 대한 음성 스트림을 Transcrbie로 전송합니다.
+2) Transcribe는 Partial/Full로 텍스트로 변환하여 전달합니다.
+3) 텍스트를 브라우저에 있는 javascript로 만든 메시지앱이 사용하기 위하여 CloudFront - API Gateway - Lambda (redis)로 HTTP Post 방식으로 전달합니다. Lambda (redis)는 텍스트를 Amazon ElastiCache (Redis)에 publish합니다.
+4) Lambda (voice)는 redis를 사용자 id로 subscribe하고 있다가 메시지가 네려오면 client로 전달합니다. Javacript로 된 메시지앱은 API Gateway와 Websocket으로 연결되어 있으므로 Redis를 통해 Lambda(voice)로 전달된 메시지는 즉시 client인 메시지앱으로 전달됩니다.
+5) 메시지앱은 API Gateway - Lambda(chat)을 이용하여 LLM에 답변을 요청합니다.
+6) 이때, 기존에 대화 이력이 없는 경우에는 DynamoDB에 이전 대화 이력이 있는지 확인하여 내부 메모리에 업데이트 합니다.
+7) 대화이력을 포함한 Prompt가 LLM에 전달되어 적절한 응답을 얻습니다.
+8) LLM의 답변은 CloudFront - API Gateway - Lambda (Polly)로 HTTP POST 방식으로 음성으로 변환을 요청합니다. Polly에서는 ogg형태의 음성 바이너리를 응답(200 OK)로 전달하면 브라우저에서 재생합니다.
 
 <img src="main-architecture.png" width="800">
 
