@@ -158,7 +158,7 @@ response = polly_client.synthesize_speech(
 encoded_content = base64.b64encode(response['AudioStream'].read()).decode()
 ```
 
-client는 [chat.html](./html/chat.html)와 같이 아래와 onended를 포함한 audio를 정의합니다. 
+client는 [chat.html](./html/chat.html)와 같이 아래와 [onended](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/ended_event) 포함한 audio를 정의합니다. 
 
 ```html
 <audio src="" onended=""></audio>
