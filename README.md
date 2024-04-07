@@ -267,3 +267,37 @@ function playAudio(audio) {
     })
 }
 ```
+
+
+## 직접 실습 해보기
+
+### 사전 준비 사항
+
+이 솔루션을 사용하기 위해서는 사전에 아래와 같은 준비가 되어야 합니다.
+
+- [AWS Account 생성](https://repost.aws/ko/knowledge-center/create-and-activate-aws-account)에 따라 계정을 준비합니다.
+
+### CDK를 이용한 인프라 설치
+
+본 실습에서는 Seoul 리전 (ap-northeast-2)을 사용합니다. [인프라 설치](./deployment.md)에 따라 CDK로 인프라 설치를 진행합니다. [CDK 구현 코드](./cdk-voicebot/README.md)에서는 Typescript로 인프라를 정의하는 방법에 대해 상세히 설명하고 있습니다. 
+
+## 실행결과
+
+
+## 리소스 정리하기 
+
+더이상 인프라를 사용하지 않는 경우에 아래처럼 모든 리소스를 삭제할 수 있습니다. 
+
+1) [API Gateway Console](https://ap-northeast-2.console.aws.amazon.com/apigateway/main/apis?region=ap-northeast-2)로 접속하여 "rest-api-for-llm-voicebot", "voice-ws-api-for-llm-voicebot", "ws-api-for-llm-voicebot"을 삭제합니다.
+
+2) [Cloud9 Console](https://ap-northeast-2.console.aws.amazon.com/cloud9control/home?region=ap-northeast-2#/)에 접속하여 아래의 명령어로 전체 삭제를 합니다.
+
+
+```text
+cd ~/environment/llm-voicebot/cdk-voicebot/ && cdk destroy --all
+```
+
+
+## 결론
+
+LLM으로 한국어 Voice-to-Voice 방식의 voice bot을 구현하여씃ㅂ니다. 한국 Voice 인식에 오류가 있더라도 LLM이 기능적으로 동일하게 처리할수 있어서 전체적인 인식능력의 향상을 기대할 수 있습니다. 또한 LLM에서 사용성을 위해 Stream을 사용하듯이 STT/TTS에서도 Stream을 사용하면 사용성이 개선됩니다. 
