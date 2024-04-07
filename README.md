@@ -1,12 +1,12 @@
 # 음성 챗봇 만들기
 
-여기서는 음성 텍스트 변환(Speech-to-Text), LLM(Large Language Model), 텍스트 음성 변환 (Text-to-Speech)를 통해 음성 챗봇 (voicebot)을 만드는것을 설명합니다. 전체적인 Architecture는 아래와 같습니다.
+여기서는 음성 텍스트 변환(Speech-to-Text), LLM(Large Language Model), 텍스트 음성 변환 (Text-to-Speech)를 통해 음성 챗봇 (voicebot)을 만드는것을 설명합니다. 전체적인 Architecture는 아래와 같습니다. 디바이스의 Voice Interpreter는 목소리에 대한 음성 스트림을 Transcrbie로 전송하여 텍스트로 변환합니다. 이 텍스트를 브라우저에 있는 javascript로 만든 메시지앱이 사용하기 위하여 CloudFront - API Gateway - Lambda (redis)로 HTTP Post 방식으로 전달합니다. 음성을 변환한 텍스트는 Amazon ElastiCache (Redis)에 publish 되며, 이를 subscribe하고 있는 Lambda (voice)로 전달됩니다. Javacript로 된 메시지앱은 API Gateway와 Websocket으로 연결되어 있으므로 Redis를 통해 Lambda(voice)로 전달된 메시지는 즉시 client인 메시지앱으로 전달됩니다. 메시지앱은 API Gateway - Lambda(chat)을 이용하여 LLM에 답변을 요청합니다. 이때, 기존에 대화 이력이 없는 경우에는 DynamoDB에 이전 대화 이력이 있는지 확인하여 내부 메모리에 업데이트 합니다. LLM을 통해 얻어진 답변은  CloudFront - API Gateway - Lambda (Polly)로 HTTP POST 방식으로 음성으로 변환을 요청합니다. Polly에서는 ogg형태의 음성 바이너리를 응답(200 OK)로 전달하면 브라우저에서 재생합니다.
 
 <img src="main-architecture.png" width="800">
 
 ## Speech-to-Text (Voice Interpreter)
 
-Voice Interpreter는 [Amazon Transcribe Streaming SDK](https://github.com/awslabs/amazon-transcribe-streaming-sdk)을 참조하여 음성으로부터 Text를 추출합니다. 아래에서 설명하는 [Python 파일](./interpreter/mic_main.py)은 [Greengrass V2](https://docs.aws.amazon.com/greengrass/v2/developerguide/develop-greengrass-components.html)의 Local component를 이용해 Device에 설치되고 실행됩니다. 이를 이용해 Device는 사용자의 음성에서 텍스트를 추출하여 생성형 AI를 이용한 Application에서 활용할 수 있습니다. [sounddevice](https://pypi.org/project/sounddevice/)를 이용해 아래와 같이 audio stream에서 음성 데이터를 추출합니다.
+Voice Interpreter는 [Amazon Transcribe Streaming SDK](https://github.com/awslabs/amazon-transcribe-streaming-sdk)을 참조하여 음성으로부터 Text를 추출합니다. 아래에서 설명하는 [Python 파일](./interpreter/mic_main.py)은 [Greengrass V2](https://docs.aws.amazon.com/greengrass/v2/developerguide/develop-greengrass-components.html)의 Local component를 이용해 Device에 설치되고 실행됩니다. 이를 이용해 Device는 사용자의 음성에서 텍스트를 추출하여 생성형 AI를 이용한 Application에서 활용할 수 있습니다. [sounddevice](https://pypi.org/project/sounddevice/)를 이용해 아래와 같이 audio stream에서 음성 데이터를 추출합니다. 
 
 ```python
 stream = sounddevice.RawInputStream(
