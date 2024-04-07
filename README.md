@@ -94,7 +94,7 @@ chat = BedrockChat(
 )
 ```
 
-prompt는 아래와 같이 일반적인 대화를 가정하였습니다. 
+prompt는 아래와 같이 일반적인 대화를 가정하였습니다. 
 
 ```python
 def general_conversation(chat, query):
