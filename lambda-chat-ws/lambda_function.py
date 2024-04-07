@@ -263,8 +263,7 @@ def general_conversation(chat, query):
     time_for_inference = history_length = token_counter_history = 0
     
     system = (
-        """다음은 Human과 Assistant의 친근한 대화입니다. 빠른 대화를 위해 답변은 짧고 정확하게 핵심만 얘기합니다. 필요시 2문장으로 답변할 수 있으나 가능한 1문장으로 답변합니다.
-        """
+        "다음은 Human과 Assistant의 친근한 대화입니다. 빠른 대화를 위해 답변은 짧고 정확하게 핵심만 얘기합니다. 필요시 2문장으로 답변할 수 있으나 가능한 1문장으로 답변합니다."
     )    
     human = "{input}"
     
