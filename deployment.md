@@ -72,7 +72,23 @@ cdk deploy --all
 
 9) NAT 설정
 
-추가 예정 
+[VPC Console](https://ap-northeast-1.console.aws.amazon.com/vpcconsole/home?region=ap-northeast-1#vpcs:)에 접속합니다.
+
+아래와 같이 "vpc-for-llm-voicebot"의 VPC ID를 선택합니다. 
+
+![image](https://github.com/kyopark2014/llm-voicebot/assets/52392004/764dd596-c8b9-4c89-80c5-ba612d5829a7)
+
+아래와 같이 subnet중에 private를 찾아서 Route tables을 선택합니다. Subnets에서 public/private 이름을 가진 2개의 subnet이 있으므로 private을 주의하여 선택합니다. 
+
+![noname](https://github.com/kyopark2014/llm-voicebot/assets/52392004/cbf27381-9c73-460d-89eb-0682d5bea066)
+
+[Routs]에서 [Edit routes]를 선택합니다.
+
+![noname](https://github.com/kyopark2014/llm-voicebot/assets/52392004/047be27b-0518-475a-ba9a-a9fe3e781cc2)
+
+아래와 같이 [Add route]를 선택하여, Destionation으로 "0.0.0.0/0"을 선택하고, Target은 "Nat Gateway"를 선택하여 생성되어 있는 NAT를 지정합니다. 이후 [Save changes]를 선택하여 저장합니다. 
+
+![noname](https://github.com/kyopark2014/llm-voicebot/assets/52392004/a03e9e9e-b49b-4210-96d3-c0c1cd0f3493)
 
 10) Output의 WebUrlforstreamchatbot의 URL로 접속합니다. Voice Interpreter와 사용자 ID를 이용해 데이터를 교환합니다. 따라서 사용자 ID로 "robot"라고 입력합니다.
 
