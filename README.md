@@ -53,7 +53,7 @@ async def basic_transcribe():
     await asyncio.gather(write_chunks(stream), handler.handle_events())
 ````
 
-텍스트는 아래와 같이 handle_transcript_event()에서 수행합니다. 결과는 Stream 형태로 부분(partial) 결과 후에 전체 결과(full)를 얻을 수 있습니다. 이 데이터를 requests를 이용하여 API 서버로 전달하면, 생성형 AI에서 활용할 수 있습니다. 
+텍스트는 아래와 같이 handle_transcript_event()에서 수행합니다. 결과는 Stream 형태로 부분(partial) 결과 후에 전체 결과(full)를 얻을 수 있습니다. state를 proceeding/completed로 나누어서, requests를 이용하여 API 서버로 전달하면, 생성형 AI에서 활용할 수 있습니다. 
 ```python
 async def handle_transcript_event(self, transcript_event: TranscriptEvent):
   results = transcript_event.transcript.results
@@ -82,7 +82,7 @@ async def handle_transcript_event(self, transcript_event: TranscriptEvent):
 
 ## LLM
 
-여기서 Calude 모델을 이용해 채팅을 구현합니다.
+Bedrock의 LLM을 이용해 질문과 답변을 수행하고자 합니다. 여기서는 한국어 성능이 좋고, 속도가 가장 빠른 Claude3 Haiku를 사용하였습니다. 
 
 ```python
 chat = BedrockChat(
@@ -94,7 +94,7 @@ chat = BedrockChat(
 )
 ```
 
-자연스러운 대화를 위해 자주쓰는 표현을 prompt에 등록하여 활용합니다.
+prompt는 아래와 같이 일반적인 대화를 가정하였습니다. 
 
 ```python
 def general_conversation(chat, query):
