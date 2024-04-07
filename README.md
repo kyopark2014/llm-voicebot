@@ -283,6 +283,14 @@ function playAudio(audio) {
 
 ## 실행결과
 
+interpreter를 실행하면 아래와 같이 Stream으로 전달된 음성이 텍스트로 전환됨을 알 수 있습니다. 처음에 "너의 일이"로 인식되었다가 뒷 문장을 인식해서 "너의 이름은 무엇이니"로 변경되었음을 확인할 수 있습니다. 
+
+![noname](https://github.com/kyopark2014/llm-voicebot/assets/52392004/8156a44e-d9bc-41a3-97e9-2c0ed25e3fe3)
+
+이때, 채팅화면에 표시되는 입/출력은 아래와 같습니다. 마이크로 인식한 음성을 인식했고, LLM이 적절한 답변을 생성하였습니다. 화면에 표시되지 않지만, 실행시 브라우저를 통해 답변을 들을 수 있습니다. 
+
+![image](https://github.com/kyopark2014/llm-voicebot/assets/52392004/c060fe1a-9627-403b-a3bb-56ead97978dc)
+
 
 ## 리소스 정리하기 
 
