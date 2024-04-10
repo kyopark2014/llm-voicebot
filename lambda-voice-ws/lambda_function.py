@@ -98,6 +98,7 @@ def lambda_handler(event, context):
         else:
             body = event.get("body", "")
             if body[0:8] == "__ping__":  # keep alive
+                print('body: ', body)
                 sendMessage("__pong__")
             else:  
                 print('connectionId: ', connectionId)
