@@ -106,13 +106,11 @@ def lambda_handler(event, context):
                 jsonBody = json.loads(body)
                 print('request body: ', json.dumps(jsonBody))
                 userId  = jsonBody['user_id']
+                type = jsonBody['type']
                 
                 # for testing message
-                #deliveryVoiceMessage("general", "hello world!")
-                if userId in isConnected:
+                if type == 'initiate':
                     start_redis_pubsub(userId)
-                else:
-                    isConnected[userId] = True                
     return {
         "isBase64Encoded": False,
         'statusCode': 200,
