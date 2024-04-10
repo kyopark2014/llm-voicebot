@@ -99,7 +99,6 @@ def lambda_handler(event, context):
             body = event.get("body", "")
             if body[0:8] == "__ping__":  # keep alive
                 if isConnected == False:
-                    start_redis_pubsub(userId)                
                     isConnected = True
                 sendMessage("__pong__")
             else:  
