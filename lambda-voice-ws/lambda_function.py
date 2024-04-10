@@ -74,7 +74,7 @@ def deliveryVoiceMessage(msg):
     
     sendMessage(result)      
 
-isConnected = False        
+isConnected = [] 
 def start_redis_pubsub(userId):
     print('start subscribing redis.')
     channel = userId 
@@ -98,8 +98,6 @@ def lambda_handler(event, context):
         else:
             body = event.get("body", "")
             if body[0:8] == "__ping__":  # keep alive
-                if isConnected == False:
-                    isConnected = True
                 sendMessage("__pong__")
             else:  
                 print('connectionId: ', connectionId)
@@ -111,9 +109,10 @@ def lambda_handler(event, context):
                 
                 # for testing message
                 #deliveryVoiceMessage("general", "hello world!")
-                start_redis_pubsub(userId)                
-                isConnected = True
-                
+                if userId in isConnected:
+                    start_redis_pubsub(userId)
+                else:
+                    isConnected[userId] = True                
     return {
         "isBase64Encoded": False,
         'statusCode': 200,
