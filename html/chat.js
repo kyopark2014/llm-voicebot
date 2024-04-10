@@ -234,6 +234,7 @@ function connect(endpoint, type) {
 
                 if(enableTTS) {
                     console.log('requested: ', requested[response.request_id]);
+                    
                     if(requested[response.request_id] == undefined) {
                         requestId = response.request_id;
                         playList.push({
@@ -247,7 +248,7 @@ function connect(endpoint, type) {
                             
                         next = true;
                         playAudioList();
-                    }    
+                    }
                     
                     retryCounter = 10;
                     checkingDelayedPlayList();
@@ -334,6 +335,7 @@ let redirectTm; // timer for redirection
 let remainingRedirectedMessage;  // merge two consecutive messages in 2 seconds
 let messageTransfered = new HashMap();
 let messageMemory = new HashMap();   // duplication check caused by pubsub in the case of abnormal disconnection
+let scoreValue = new HashMap();   // duplication check for score
 
 function requestReDirectMessage(requestId, query, userId, requestTime, conversationType) {  
     console.log('--> send the redirected message');
@@ -464,6 +466,13 @@ function voiceConnect(voiceEndpoint, type) {
                         else {  // in order to manipulate voice messages where the message will be delayed for one time
                             delayedRequestForRedirectionMessage(requestId, query, userId, requestTime, conversationType);                                   
                         }
+                        
+                        console.log('get score for ', query);
+                        if(scoreValue.get(requestId)==undefined) { // check duplication
+                            getScore(userId, requestId, query); 
+                            scoreValue.put(requestId, true);
+                        }
+                         
                     }
                     else {  
                         console.log('ignore the duplicated message: ', query);
@@ -716,6 +725,9 @@ function onSend(e) {
         let requestId = uuidv4();
         addSentMessage(requestId, timestr, message.value);
 
+        console.log('request to estimate the score');
+        getScore(userId, requestId, message.value);
+        
         if(protocol == 'WEBSOCKET') {
             sendMessage({
                 "user_id": userId,
@@ -838,6 +850,44 @@ function addSentMessageForSummary(requestId, timestr, text) {
     chatPanel.scrollTop = chatPanel.scrollHeight;  // scroll needs to move bottom
     index++;
 }  
+
+function getScore(userId, requestId, text) {
+    const uri = "score";
+    const xhr = new XMLHttpRequest();
+
+    xhr.open("POST", uri, true);
+    xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            let response = JSON.parse(xhr.responseText);
+            console.log("response: " + JSON.stringify(response));   
+            let result = response.result;
+            console.log("result: " + JSON.stringify(result));   
+            let score = result.score;
+            console.log("score: " + score);    
+            let description = result.description;
+            console.log("description: " + description);    
+
+            addNotifyMessage('[debug] score: '+score+', description: '+description);
+        }
+    };
+
+    let mbti;
+    if(conversationType=='normal' || conversationType=='translation') mbti = 'ISTP';
+    else mbti = conversationType;
+    console.log('mbti: ', mbti);
+
+    var requestObj = {
+        "userId": userId,
+        "requestId": requestId,
+        "text": text,
+        "mbti": mbti
+    }
+    console.log("request for getScore: " + JSON.stringify(requestObj));
+
+    var blob = new Blob([JSON.stringify(requestObj)], {type: 'application/json'});
+
+    xhr.send(blob);   
+}
 
 function addReceivedMessage(requestId, msg) {
     // console.log("add received message: "+msg);
@@ -1030,10 +1080,11 @@ attachFile.addEventListener('click', function(){
             };
         
             var requestObj = {
+                "type": "doc",
                 "filename": filename,
                 "contentType": contentType,
             }
-            console.log("request: " + JSON.stringify(requestObj));
+            console.log("request from file: " + JSON.stringify(requestObj));
         
             var blob = new Blob([JSON.stringify(requestObj)], {type: 'application/json'});
         
@@ -1073,7 +1124,7 @@ function sendRequest(text, requestId, requestTime) {
         "type": "text",
         "body":text
     }
-    console.log("request: " + JSON.stringify(requestObj));
+    console.log("request for query: " + JSON.stringify(requestObj));
 
     var blob = new Blob([JSON.stringify(requestObj)], {type: 'application/json'});
 
