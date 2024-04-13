@@ -174,7 +174,7 @@ function checkingDelayedPlayList() {
 }
 
 // chat session 
-let sentance = "";
+let sentance = new HashMap();
 let lineText = "";
 let playList = [];
 let current = 0;
@@ -258,14 +258,14 @@ function connect(endpoint, type) {
             else if(response.status == 'istyping') {
                 feedback.style.display = 'inline';
                 // feedback.innerHTML = '<i>typing a message...</i>'; 
-                sentance = "";
+                sentance.put(response.request_id, "");
             }
             else if(response.status == 'proceeding') {
                 // console.log('status: proceeding...')
                 feedback.style.display = 'none';
-                sentance += response.msg;                
+                sentance.put(response.request_id, sentance.get(response.request_id)+response.msg);             
                 
-                addReceivedMessage(response.request_id, sentance);
+                addReceivedMessage(response.request_id, sentance.get(response.request_id));
                 // console.log('response.msg: ', response.msg);
 
                 if(enableTTS) {
