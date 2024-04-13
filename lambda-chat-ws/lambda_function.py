@@ -258,7 +258,7 @@ def isKorean(text):
         print('Not Korean: ', word_kor)
         return False
 
-def general_conversation(chat, query):
+def general_conversation(chat, requestId, query):
     global time_for_inference, history_length, token_counter_history    
     time_for_inference = history_length = token_counter_history = 0
     
@@ -275,14 +275,14 @@ def general_conversation(chat, query):
                 
     chain = prompt | chat    
     try: 
-        isTyping()  
+        isTyping(requestId)  
         stream = chain.invoke(
             {
                 "history": history,
                 "input": query,
             }
         )
-        msg = readStreamMsg(stream.content)    
+        msg = readStreamMsg(requestId, stream.content)    
                             
         msg = stream.content
         print('msg: ', msg)
@@ -290,12 +290,12 @@ def general_conversation(chat, query):
         err_msg = traceback.format_exc()
         print('error message: ', err_msg)        
             
-        sendErrorMessage(err_msg)    
+        sendErrorMessage(requestId, err_msg)    
         raise Exception ("Not able to request to LLM")
     
     return msg
 
-def isTyping():    
+def isTyping(requestId):    
     msg_proceeding = {
         'request_id': requestId,
         'msg': 'Proceeding...',
@@ -304,7 +304,7 @@ def isTyping():
     #print('result: ', json.dumps(result))
     sendMessage(msg_proceeding)
         
-def readStreamMsg(stream):
+def readStreamMsg(requestId, stream):
     msg = ""
     if stream:
         for event in stream:
@@ -332,7 +332,7 @@ def sendMessage(body):
         print('err_msg: ', err_msg)
         raise Exception ("Not able to send a message")
     
-def sendResultMessage(msg):    
+def sendResultMessage(requestId, msg):    
     result = {
         'request_id': requestId,
         'msg': msg,
@@ -341,7 +341,7 @@ def sendResultMessage(msg):
     #print('debug: ', json.dumps(debugMsg))
     sendMessage(result)
         
-def sendErrorMessage(msg):
+def sendErrorMessage(requestId, msg):
     errorMsg = {
         'request_id': requestId,
         'msg': msg,
@@ -381,7 +381,7 @@ def load_chat_history(userId, allowTime):
             else:
                 memory_chain.chat_memory.add_ai_message(msg)     
 
-def translate_text(chat, text):
+def translate_text(chat, requestId, text):
     system = (
         "You are a helpful assistant that translates {input_language} to {output_language} in <article> tags. Put it in <result> tags."
     )
@@ -556,17 +556,17 @@ def getResponse(jsonBody):
                 msg  = "The chat memory was intialized in this session."
             else:            
                 if convType == "normal":
-                    msg = general_conversation(chat, text)   
+                    msg = general_conversation(chat, requestId, text)   
                 elif convType == "translation":
-                    msg = translate_text(chat, text)
+                    msg = translate_text(chat, requestId, text)
                 else: 
-                    msg = general_conversation(chat, text)   
+                    msg = general_conversation(chat, requestId, text)   
                                         
             memory_chain.chat_memory.add_user_message(text)
             memory_chain.chat_memory.add_ai_message(msg)
                     
         elif type == 'document':
-            isTyping()
+            isTyping(requestId)
             
             object = body
             file_type = object[object.rfind('.')+1:len(object)]            
@@ -683,13 +683,13 @@ def getResponse(jsonBody):
     else:
         selected_LLM = selected_LLM + 1
     
-    sendResultMessage(msg)  
+    sendResultMessage(requestId, msg)  
     
     return msg
 
 def lambda_handler(event, context):
     # print('event: ', event)    
-    global connectionId, requestId
+    global connectionId
     
     msg = ""
     if event['requestContext']: 
@@ -713,7 +713,6 @@ def lambda_handler(event, context):
                 jsonBody = json.loads(body)
                 print('request body: ', json.dumps(jsonBody))
 
-                requestId  = jsonBody['request_id']
                 try:                    
                     msg = getResponse(jsonBody)
                     print('msg: ', msg)
@@ -722,7 +721,8 @@ def lambda_handler(event, context):
                     err_msg = traceback.format_exc()
                     print('err_msg: ', err_msg)
 
-                    sendErrorMessage(err_msg)    
+                    requestId  = jsonBody['request_id']
+                    sendErrorMessage(requestId, err_msg)    
                     raise Exception ("Not able to send a message")
 
     return {
