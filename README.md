@@ -85,13 +85,11 @@ async def handle_transcript_event(self, transcript_event: TranscriptEvent):
 Bedrock의 LLM을 이용해 질문과 답변을 수행하고자 합니다. 여기서는 한국어 성능이 좋고, 속도가 가장 빠른 Claude3 Haiku를 사용하였습니다. 
 
 ```python
-chat = BedrockChat(
-    model_id = modelId,
-    client = boto3_bedrock,
-    streaming = True,
-    callbacks = [StreamingStdOutCallbackHandler()],
-    model_kwargs = parameters,
-)
+chat = ChatBedrock(   
+    model_id=modelId,
+    client=boto3_bedrock, 
+    model_kwargs=parameters,
+)  
 ```
 
 prompt는 아래와 같이 일반적인 대화를 가정하였습니다. 
