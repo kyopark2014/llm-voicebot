@@ -8,7 +8,6 @@ import uuid
 import json
 
 from langchain.prompts import PromptTemplate
-from langchain.llms.bedrock import Bedrock
 from botocore.config import Config
 from PIL import Image
 from io import BytesIO
@@ -16,9 +15,9 @@ from urllib import parse
 import traceback
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
-from langchain_community.chat_models import BedrockChat
 from langchain_core.prompts import MessagesPlaceholder, ChatPromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_aws import ChatBedrock
 
 bucket = os.environ.get('s3_bucket') # bucket name
 s3_prefix = os.environ.get('s3_prefix')
@@ -60,13 +59,11 @@ def get_chat(profile_of_LLMs, selected_LLM):
     }
     # print('parameters: ', parameters)
 
-    chat = BedrockChat(
+    chat = ChatBedrock(   
         model_id=modelId,
         client=boto3_bedrock, 
-        streaming=True,
-        callbacks=[StreamingStdOutCallbackHandler()],
         model_kwargs=parameters,
-    )        
+    )     
     
     return chat
 
