@@ -46,6 +46,12 @@ const claude3_sonnet = [
     "model_type": "claude3",
     "model_id": "anthropic.claude-3-sonnet-20240229-v1:0",
     "maxOutputTokens": "4096"
+  },
+  {
+    "bedrock_region": "ap-south-1", // Mumbai
+    "model_type": "claude3",
+    "model_id": "anthropic.claude-3-sonnet-20240229-v1:0",
+    "maxOutputTokens": "4096"
   }
 ];
 
@@ -70,6 +76,12 @@ const claude3_haiku = [
   },
   {
     "bedrock_region": "eu-west-3", // Paris
+    "model_type": "claude3",
+    "model_id": "anthropic.claude-3-haiku-20240307-v1:0",
+    "maxOutputTokens": "4096"
+  },
+  {
+    "bedrock_region": "ap-south-1", // Mumbai
     "model_type": "claude3",
     "model_id": "anthropic.claude-3-haiku-20240307-v1:0",
     "maxOutputTokens": "4096"
