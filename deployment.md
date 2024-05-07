@@ -2,7 +2,7 @@
 
 ## Bedrock 사용 권한 설정하기
 
-LLM으로 Anthropic의 Claude3을 사용하기 위하여, Amazon Bedrock의 Virginia(us-east-1)와 Oregon(us-west-2) 리전을 사용합니다. [Model access - Virginia](https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess)와  [Model access - Oregon](https://us-west-2.console.aws.amazon.com/bedrock/home?region=us-west-2#/modelaccess)에 접속한후, [Edit]를 선택하여 모든 모델을 사용할 수 있도록 설정합니다. 특히, Claude Sonet과 Haiku는 반드시 사용할 수 있어야 합니다. 
+여기서는 Multi-Region LLM을 사용하기 위하여, Bedrock은 Virginia(us-east-1), Oregon(us-west-2), Sydney(ap-northeast-2), Paris(eu-west-3), Mumbai(ap-south-1) 리전을 사용합니다. [Model access - N.Virginia](https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess), [Model access - Oregon](https://us-west-2.console.aws.amazon.com/bedrock/home?region=us-west-2#/modelaccess), [Model access - Sydney](https://ap-southeast-2.console.aws.amazon.com/bedrock/home?region=ap-southeast-2#/modelaccess), [Model access - Paris](https://eu-west-3.console.aws.amazon.com/bedrock/home?region=eu-west-3#/modelaccess), [Model access - Mumbai](https://ap-south-1.console.aws.amazon.com/bedrock/home?region=ap-south-1#/modelaccess)에 접속해서 [Edit]를 선택하여 모든 모델을 사용할 수 있도록 설정합니다. 특히 Anthropic Claude와 "Titan Embeddings G1 - Text"은 LLM 및 Vector Embedding을 위해서 반드시 사용이 가능하여야 합니다.
 
 ![image](https://github.com/kyopark2014/demo-ai-dansing-robot/assets/52392004/8bd8978e-5906-4d8c-93b0-b316976307e2)
 
