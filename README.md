@@ -1,5 +1,9 @@
 # 한국어 Voice-to-Voice 방식의 Voice Bot 만들기
 
+<a href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fkyopark2014%2Fllm-voicebot&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false"/></a>
+<img alt="License" src="https://img.shields.io/badge/LICENSE-MIT-green">
+
+
 여기서는 음성 텍스트 변환(Speech-to-Text), LLM(Large Language Model), 텍스트 음성 변환 (Text-to-Speech)를 통해 음성 챗봇 (voicebot)을 만드는것을 설명합니다. 전체적인 Architecture는 아래와 같습니다. 
 
 1) 디바이스의 Voice Interpreter는 목소리에 대한 음성 스트림을 Transcrbie로 전송합니다.
