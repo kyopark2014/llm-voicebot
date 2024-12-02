@@ -22,7 +22,7 @@ def subscribe_redis(redis_client, channel):
         print('message: ', message)
                 
         if message['data'] != 1:            
-            msg = message['data'].encode('utf-8').decode('unicode_escape')
+            msg = message['data'].encode('utf-8').decode('raw_unicode_escape')
             # msg = msg[1:len(msg)-1]
             print('voice msg: ', msg)    
                     
