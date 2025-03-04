@@ -317,3 +317,7 @@ cd ~/environment/llm-voicebot/cdk-voicebot/ && cdk destroy --all
 ## 결론
 
 LLM으로 한국어 Voice-to-Voice 방식의 voice bot을 구현하였습니다. 한국 Voice 인식에 오류가 있더라도 LLM이 기능적으로 동일하게 처리할수 있어서 전체적인 인식 능력의 향상을 기대할 수 있었습니다. 또한 LLM에서 Stream을 사용하듯이 STT/TTS에서도 Stream을 사용하면 사용성이 개선되는것을 확인하였습니다. 
+
+## Reference
+
+[LLM Voice](https://www.linkedin.com/posts/andrewyng_the-voice-stack-is-improving-rapidly-systems-activity-7300912040959778818-B_hc/?utm_source=share&utm_medium=member_android&rcm=ACoAAA5jTp0BX-JuOkof3Ak56U3VlXjQVT43NzQ)
